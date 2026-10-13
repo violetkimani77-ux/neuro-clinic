@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets — NEVER commit real values
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Build / framework output
+dist/
+dist-ssr/
+.output/
+.nitro/
+.tanstack/
+.cache/
+.vercel/
+.run/
+src/routeTree.gen.ts
+
+# Runtime on-disk data (Vercel/dev fallback writes) — not source, not for backup
+.data/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
