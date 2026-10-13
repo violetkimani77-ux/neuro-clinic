@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import CqShell from "~/components/drandrew/CqShell";
-import { PRACTICE } from "~/lib/booking/practice";
+import { WhatsAppIcon } from "~/components/drandrew/CqWhatsApp";
+import { PRACTICE, whatsappLink } from "~/lib/booking/practice";
 
 /**
  * Booking front door — same two-choice pattern as the Premium Clinic
@@ -107,11 +108,22 @@ function BookFrontDoor() {
 
           <section className="cq-door__support-block" aria-label="Talk to the practice">
             <h2>Prefer to talk to someone?</h2>
-            <p>Dr. Nyaoncha&rsquo;s team is happy to arrange your consultation by phone.</p>
-            <a className="cq-btn cq-btn--ghost" href={`tel:${PRACTICE.phone}`}>
-              <span className="cq-ic"><PhoneIcon /></span>
-              Call {PRACTICE.phoneDisplay}
-            </a>
+            <p>Dr. Nyaoncha&rsquo;s team is happy to arrange your consultation by phone or WhatsApp.</p>
+            <div className="cq-door__support-actions">
+              <a className="cq-btn cq-btn--ghost" href={`tel:${PRACTICE.phone}`}>
+                <span className="cq-ic"><PhoneIcon /></span>
+                Call {PRACTICE.phoneDisplay}
+              </a>
+              <a
+                className="cq-btn cq-btn--wa"
+                href={whatsappLink("Hello Dr. Nyaoncha's team, I'd like to book a consultation.")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <WhatsAppIcon size={18} />
+                Chat on WhatsApp
+              </a>
+            </div>
             <p className="cq-door__hours">{PRACTICE.hours}</p>
           </section>
 

@@ -1,0 +1,66 @@
+/* ═══════════ DR. NYAONCHA — HOME ADDITIONS (map, FAQ, footer links, forms) ═══════════ */
+
+/* Contact form */
+.cq-form__privacy{margin:14px 0 0;text-align:center;font-size:13px;color:var(--cq-muted)}
+.cq-form__privacy a{color:var(--cq-petrol-600);font-weight:600}
+.cq-form .cq-btn:disabled{opacity:.6;cursor:wait!important}
+.cq-info .cq-info__more{margin-top:6px;font-size:14px;text-decoration:none}
+
+/* Map */
+.cq-map{display:grid;grid-template-columns:1.6fr 1fr;margin-top:32px;background:#fff;border:1px solid var(--cq-line);border-radius:14px;overflow:hidden;scroll-margin-top:84px}
+.cq-map__frame{position:relative;min-height:340px;background:var(--cq-petrol-100)}
+.cq-map__frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cq-map__card{padding:32px}
+.cq-map__card h3{font:600 24px var(--cq-font-display);margin:0 0 10px}
+.cq-map__card p{color:var(--cq-muted);margin:0 0 12px}
+.cq-map__card .cq-eyebrow{color:var(--cq-brass-deep)}
+.cq-map__hours{font-size:14.5px}
+.cq-map__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+
+/* FAQ */
+.cq-faq{max-width:860px}
+.cq-faq__list{border-top:1px solid var(--cq-line)}
+.cq-faq__item{border-bottom:1px solid var(--cq-line)}
+.cq-faq__item summary{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:44px;padding:20px 4px;cursor:pointer;list-style:none;font:600 19px/1.35 var(--cq-font-display)}
+.cq-faq__item summary::-webkit-details-marker{display:none}
+.cq-faq__item summary::after{content:"+";flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--cq-petrol-100);color:var(--cq-petrol-700);font:600 20px var(--cq-font-body);transition:transform .2s}
+.cq-faq__item[open] summary::after{content:"–"}
+.cq-faq__item summary:hover{color:var(--cq-petrol-700)}
+.cq-faq__item summary:focus-visible{outline:3px solid var(--cq-petrol-600);outline-offset:2px}
+.cq-faq__answer{padding:0 52px 22px 4px;color:var(--cq-muted);font-size:16px}
+.cq-faq__answer a{color:var(--cq-petrol-600);font-weight:600}
+.cq-faq__answer ul{margin:0;padding-left:20px}
+.cq-faq__cta{text-align:center;margin-top:36px}
+
+/* Footer links */
+.cq-footer .cq-footer__links{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 22px;margin:14px 0 4px}
+.cq-footer .cq-footer__links a{display:inline-block;margin:0;font-weight:400;font-size:14px;color:#faf7f1d9;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#faf7f159}
+.cq-footer .cq-footer__links a:hover{color:#fff}
+
+/* Anchored sections clear the sticky nav */
+.cq-page section[id]{scroll-margin-top:68px}
+
+@media (max-width:899px){
+  .cq-map{grid-template-columns:1fr}
+  .cq-map__frame{min-height:280px}
+}
+@media (max-width:639px){
+  .cq-map__card{padding:24px}
+  .cq-map__actions .cq-btn{flex:1 1 100%}
+  .cq-faq__item summary{font-size:17px}
+  .cq-faq__answer{padding-right:4px}
+}
+
+/* Legal pages */
+.cq-legal__inner{max-width:780px}
+.cq-legal h1{margin-bottom:6px}
+.cq-legal__updated{color:var(--cq-muted);font-size:14px;margin:0 0 18px}
+.cq-legal__draft{background:#fdf3e1;border:1px solid #e8d2a6;border-radius:10px;padding:12px 16px;font-size:14.5px;margin:0 0 28px}
+.cq-legal h2{font:600 22px var(--cq-font-display);margin:36px 0 10px;letter-spacing:0}
+.cq-legal p,.cq-legal li{font-size:16.5px;color:var(--cq-ink)}
+.cq-legal p{margin:0 0 14px}
+.cq-legal ul{margin:0 0 14px;padding-left:22px}
+.cq-legal li{margin-bottom:8px}
+.cq-legal a{color:var(--cq-petrol-600);font-weight:600}
+.cq-legal__important{background:var(--cq-petrol-900);color:var(--cq-paper)!important;border-radius:12px;padding:14px 18px}
+.cq-legal__other{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:40px;padding-top:20px;border-top:1px solid var(--cq-line)}

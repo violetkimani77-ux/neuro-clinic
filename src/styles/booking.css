@@ -157,3 +157,13 @@
   .cq-confirm__actions .cq-btn{flex:1 1 100%}
 }
 .cq-page .cq-confirm__head .cq-lead,.cq-page .cq-confirm__missing .cq-lead{text-align:center}
+.cq-door__support-actions{display:flex;flex-wrap:wrap;gap:12px}
+.cq-btn--wa{background:#1da851;color:#fff!important}
+.cq-btn--wa:hover{background:#178f45;transform:translateY(-1px)}
+.cq-consent{margin:6px 0 0;padding:14px 16px;border-radius:10px;background:var(--cq-paper);border:1px solid var(--cq-line)}
+.cq-consent__label{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.5;cursor:pointer}
+.cq-consent__label input{width:20px;height:20px;flex:none;margin:2px 0 0;accent-color:var(--cq-petrol-700)}
+.cq-consent__label a{color:var(--cq-petrol-600);font-weight:600}
+.cq-consent__label--error{color:#8a1f12}
+.cq-status--confirmed,.cq-status--completed{background:#e8f5ed;color:var(--cq-success);border-color:#9acaaa}
+.cq-status--cancelled{background:#fdeceb;color:#8a1f12;border-color:#e7b4ae}

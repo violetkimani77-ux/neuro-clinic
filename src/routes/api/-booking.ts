@@ -1,31 +1,34 @@
 import { createServerFn } from "@tanstack/react-start";
 import {
   PRACTICE,
-  availabilitySlots,
+  diarySlots,
+  isDiarySlot,
+  longDateLabel,
   serviceName,
   services,
-  submittedBookings,
+  slotInstant,
   timeLabel,
   type AppointmentStatus,
   type BookingRecord,
+  type Preferred,
 } from "~/lib/booking/practice";
 
 /**
- * DR. ANDREW NYAONCHA — booking server functions (mock-backed).
+ * DR. ANDREW NYAONCHA — public booking server functions.
  *
  * Same contract and guarantees as the Premium Clinic booking path
  * (`-providence-booking.ts`), minus the specialist dimension — there is one
  * surgeon, so availability is the practice diary:
  *  - Idempotency: a retried submission with the same key returns the SAME
  *    booking and never duplicates.
- *  - In-process double-book: a second submission for a taken slot gets
- *    `SLOT_UNAVAILABLE`; the slot then disappears from availability.
+ *  - Double-book: a second request for a taken slot gets `SLOT_UNAVAILABLE`
+ *    (enforced by the store — a unique index when Postgres is connected).
  *  - Hold: the slot must still be inside its 5-minute hold, else `HOLD_EXPIRED`.
- *  - Every field is re-typed, bounded and allow-listed.
+ *  - Every field is re-typed, bounded and allow-listed, and consent to the
+ *    privacy policy is required.
  */
 
 const HOLD_MS = 5 * 60 * 1000;
-const REF_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const MOBILE_RE = /^(?=.*\d)[\d\s()+.-]+$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -37,7 +40,6 @@ export interface BookingDay {
   dateKey: string; // YYYY-MM-DD
   times: string[]; // free 24h "HH:MM"
   label: string;
-  weekdayLabel: string;
 }
 
 export type GetAvailabilityResult =
@@ -53,9 +55,10 @@ export interface SubmitBookingPayload {
   fullName: string;
   mobile: string;
   email: string | null;
-  preferredContact: (typeof PREFERRED)[number];
+  preferredContact: Preferred;
   referral: "referred" | "direct";
   referringParty: string | null;
+  consent: boolean;
 }
 
 export interface BookingConfirmation {
@@ -79,39 +82,47 @@ export type SubmitBookingResponse =
   | { success: true; booking: BookingConfirmation }
   | { success: false; code: "VALIDATION" | "SLOT_UNAVAILABLE" | "HOLD_EXPIRED" | "SERVER" };
 
-/* ── date/time helpers ─────────────────────────────────────────────────── */
-function toDateKey(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-function toHM(startIso: string): string {
-  const d = new Date(startIso);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-}
-function longDateLabel(dateKey: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short", year: "numeric" });
-}
-function weekdayLabel(dateKey: string): string {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString([], { weekday: "long" });
+async function store() {
+  const { getStore } = await import("~/lib/server/store");
+  return getStore();
 }
 
-/* ── getBookingAvailability: free slots grouped by day ─────────────────── */
+export function toConfirmation(rec: BookingRecord): BookingConfirmation {
+  return {
+    reference: rec.reference,
+    service: serviceName(rec.service),
+    doctorName: PRACTICE.name,
+    dateKey: rec.dateKey,
+    time: rec.time,
+    dateLabel: longDateLabel(rec.dateKey),
+    timeLabel: timeLabel(rec.time),
+    location: PRACTICE.location,
+    address: PRACTICE.address,
+    practicePhone: PRACTICE.phone,
+    practicePhoneDisplay: PRACTICE.phoneDisplay,
+    patientName: rec.fullName,
+    preferredContact: rec.preferredContact,
+    status: rec.status,
+  };
+}
+
+/* ── getBookingAvailability: free diary slots grouped by day ───────────── */
 export const getBookingAvailability = createServerFn().handler(async (): Promise<GetAvailabilityResult> => {
-  const byDay = new Map<string, string[]>();
-  const now = Date.now();
-  for (const slot of availabilitySlots) {
-    if (slot.status !== "free" || new Date(slot.startIso).getTime() <= now) continue;
-    const key = toDateKey(new Date(slot.startIso));
-    const arr = byDay.get(key) ?? [];
-    arr.push(toHM(slot.startIso));
-    byDay.set(key, arr);
+  try {
+    const taken = await (await store()).takenSlots();
+    const byDay = new Map<string, string[]>();
+    for (const { dateKey, time } of diarySlots()) {
+      if (taken.has(`${dateKey} ${time}`)) continue;
+      const arr = byDay.get(dateKey) ?? [];
+      arr.push(time);
+      byDay.set(dateKey, arr);
+    }
+    const days = [...byDay.entries()].map(([dateKey, times]) => ({ dateKey, times, label: longDateLabel(dateKey) }));
+    return { success: true, data: { days } };
+  } catch (error) {
+    console.error("[drandrew] availability failed:", error);
+    return { success: false, code: "SERVER", message: "Could not load availability." };
   }
-  const days = [...byDay.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([dateKey, times]) => ({ dateKey, times: times.sort(), label: longDateLabel(dateKey), weekdayLabel: weekdayLabel(dateKey) }));
-  return { success: true, data: { days } };
 });
 
 /* ── submitBooking ─────────────────────────────────────────────────────── */
@@ -129,9 +140,10 @@ function sanitize(p: unknown): { error: "VALIDATION" | "HOLD_EXPIRED" } | { valu
   const email = raw.email ? str(raw.email, 160) : null;
   const referringParty = raw.referringParty ? str(raw.referringParty, 160) : null;
   const holdUntil = typeof raw.holdUntil === "number" && Number.isFinite(raw.holdUntil) ? raw.holdUntil : NaN;
-  const preferredContact = PREFERRED.includes(raw.preferredContact as never) ? (raw.preferredContact as SubmitBookingPayload["preferredContact"]) : "";
+  const preferredContact = PREFERRED.includes(raw.preferredContact as never) ? (raw.preferredContact as Preferred) : "";
   const referral = raw.referral === "referred" || raw.referral === "direct" ? raw.referral : "";
 
+  if (raw.consent !== true) return { error: "VALIDATION" };
   if (!idempotencyKey || !fullName || !mobile) return { error: "VALIDATION" };
   if (!services.some((s) => s.slug === service)) return { error: "VALIDATION" };
   if (!MOBILE_RE.test(mobile)) return { error: "VALIDATION" };
@@ -143,35 +155,7 @@ function sanitize(p: unknown): { error: "VALIDATION" | "HOLD_EXPIRED" } | { valu
   if (Date.now() > holdUntil) return { error: "HOLD_EXPIRED" };
   if (holdUntil - Date.now() > HOLD_MS + 60_000) return { error: "VALIDATION" };
 
-  return { value: { idempotencyKey, service, dateKey, time, holdUntil, fullName, mobile, email: email || null, preferredContact, referral, referringParty } };
-}
-
-function findSlot(dateKey: string, time: string) {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  const [h, min] = time.split(":").map(Number);
-  const iso = new Date(y, m - 1, d, h, min, 0, 0).toISOString();
-  return availabilitySlots.find((s) => s.startIso === iso) ?? null;
-}
-
-function toConfirmation(rec: BookingRecord): BookingConfirmation {
-  const dateKey = toDateKey(new Date(rec.startIso));
-  const time = toHM(rec.startIso);
-  return {
-    reference: rec.reference,
-    service: serviceName(rec.service),
-    doctorName: PRACTICE.name,
-    dateKey,
-    time,
-    dateLabel: longDateLabel(dateKey),
-    timeLabel: timeLabel(time),
-    location: PRACTICE.location,
-    address: PRACTICE.address,
-    practicePhone: PRACTICE.phone,
-    practicePhoneDisplay: PRACTICE.phoneDisplay,
-    patientName: rec.fullName,
-    preferredContact: rec.preferredContact,
-    status: rec.status,
-  };
+  return { value: { idempotencyKey, service, dateKey, time, holdUntil, fullName, mobile, email: email || null, preferredContact, referral, referringParty, consent: true } };
 }
 
 export const submitBooking = createServerFn({ method: "POST" })
@@ -181,47 +165,26 @@ export const submitBooking = createServerFn({ method: "POST" })
     try {
       const check = sanitize(data);
       if ("error" in check) return { success: false, code: check.error };
-      const clean = check.value;
-
-      const existing = submittedBookings.find((b) => b.idempotencyKey === clean.idempotencyKey);
-      if (existing) return { success: true, booking: toConfirmation(existing) };
-
-      const slot = findSlot(clean.dateKey, clean.time);
-      if (!slot || slot.status !== "free") return { success: false, code: "SLOT_UNAVAILABLE" };
-      slot.status = "booked";
-
-      const { randomInt } = await import("node:crypto");
-      let reference = "";
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        let ref = "AN-";
-        for (let i = 0; i < 5; i += 1) ref += REF_CHARS[randomInt(REF_CHARS.length)];
-        if (!submittedBookings.some((b) => b.reference === ref)) {
-          reference = ref;
-          break;
-        }
+      const c = check.value;
+      // Only real diary slots that are still ahead can be requested.
+      if (!isDiarySlot(c.dateKey, c.time) || slotInstant(c.dateKey, c.time) <= Date.now()) {
+        return { success: false, code: "SLOT_UNAVAILABLE" };
       }
-      if (!reference) {
-        slot.status = "free";
-        return { success: false, code: "SERVER" };
-      }
-
-      const record: BookingRecord = {
-        idempotencyKey: clean.idempotencyKey,
-        reference,
-        service: clean.service,
-        startIso: slot.startIso,
-        status: "REQUESTED",
-        preferredContact: clean.preferredContact,
-        fullName: clean.fullName,
-        mobile: clean.mobile,
-        email: clean.email,
-        referral: clean.referral,
-        referringParty: clean.referringParty,
-        createdAt: new Date().toISOString(),
-      };
-      submittedBookings.push(record);
-      console.log("[drandrew] booking created:", reference);
-      return { success: true, booking: toConfirmation(record) };
+      const res = await (await store()).createBooking({
+        idempotencyKey: c.idempotencyKey,
+        service: c.service,
+        dateKey: c.dateKey,
+        time: c.time,
+        preferredContact: c.preferredContact,
+        fullName: c.fullName,
+        mobile: c.mobile,
+        email: c.email,
+        referral: c.referral,
+        referringParty: c.referringParty,
+      });
+      if (!res.ok) return { success: false, code: res.code };
+      console.log("[drandrew] booking created:", res.booking.reference);
+      return { success: true, booking: toConfirmation(res.booking) };
     } catch (error) {
       console.error("[drandrew] booking submission failed:", error);
       return { success: false, code: "SERVER" };
@@ -232,8 +195,31 @@ export const submitBooking = createServerFn({ method: "POST" })
 export const getBookingByReference = createServerFn()
   .validator((data: { reference: string }) => data)
   .handler(async ({ data }): Promise<{ success: true; data: BookingConfirmation | null }> => {
-    const ref = typeof data?.reference === "string" ? data.reference.trim().slice(0, 20) : "";
+    const ref = typeof data?.reference === "string" ? data.reference.trim().toUpperCase().slice(0, 20) : "";
     if (!/^AN-[A-Z0-9]{5}$/.test(ref)) return { success: true, data: null };
-    const rec = submittedBookings.find((b) => b.reference === ref);
-    return { success: true, data: rec ? toConfirmation(rec) : null };
+    try {
+      const rec = await (await store()).getBooking(ref);
+      return { success: true, data: rec ? toConfirmation(rec) : null };
+    } catch (error) {
+      console.error("[drandrew] booking lookup failed:", error);
+      return { success: true, data: null };
+    }
+  });
+
+/* ── submitContactMessage: the home page "Book a consultation" call-back form ── */
+export const submitContactMessage = createServerFn({ method: "POST" })
+  .validator((data: { name: string; phone: string; message: string }) => data)
+  .handler(async ({ data }): Promise<{ success: boolean }> => {
+    const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+    const name = str(data?.name, 120);
+    const phone = str(data?.phone, 20);
+    const message = str(data?.message, 2000);
+    if (!name || !phone || !MOBILE_RE.test(phone)) return { success: false };
+    try {
+      await (await store()).createMessage({ name, phone, message });
+      return { success: true };
+    } catch (error) {
+      console.error("[drandrew] contact message failed:", error);
+      return { success: false };
+    }
   });

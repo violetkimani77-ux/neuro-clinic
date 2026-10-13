@@ -92,6 +92,7 @@ interface Draft {
   preferredContact: Preferred | null;
   referral: ReferralKind | null;
   referringParty: string;
+  consent: boolean;
   idempotencyKey: string;
 }
 
@@ -108,6 +109,7 @@ function freshDraft(slug: string): Draft {
     preferredContact: null,
     referral: null,
     referringParty: "",
+    consent: false,
     idempotencyKey: makeKey(),
   };
 }
@@ -145,7 +147,7 @@ function BookingFlowPage() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [announce, setAnnounce] = useState("");
   const [now, setNow] = useState(() => Date.now());
-  const [errors, setErrors] = useState<{ fullName?: string; mobile?: string; email?: string; preferred?: string; referral?: string; referringParty?: string }>({});
+  const [errors, setErrors] = useState<{ fullName?: string; mobile?: string; email?: string; preferred?: string; referral?: string; referringParty?: string; consent?: string }>({});
   const [slotError, setSlotError] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -251,6 +253,7 @@ function BookingFlowPage() {
       if (!draft.preferredContact) e.preferred = "Please choose how we should contact you.";
       if (!draft.referral) e.referral = "Please tell us if you were referred by a doctor or clinic.";
       if (draft.referral === "referred" && !draft.referringParty.trim()) e.referringParty = "Please enter the referring doctor or clinic.";
+      if (!draft.consent) e.consent = "Please agree so the practice can use your details to arrange your appointment.";
       setErrors(e);
       if (Object.keys(e).length > 0) {
         setAnnounce("Some fields need your attention.");
@@ -309,6 +312,7 @@ function BookingFlowPage() {
           preferredContact: draft.preferredContact ?? "PHONE",
           referral: draft.referral ?? "direct",
           referringParty: draft.referral === "referred" ? draft.referringParty.trim() : null,
+          consent: draft.consent,
         },
       });
       if (res.success) {
@@ -608,6 +612,27 @@ function BookingFlowPage() {
                     {errors.referringParty && <p className="cq-form-error" id="an-referring-err" role="alert">{errors.referringParty}</p>}
                   </div>
                 )}
+
+                <div className="cq-consent">
+                  <label className={`cq-consent__label${errors.consent ? " cq-consent__label--error" : ""}`}>
+                    <input
+                      type="checkbox"
+                      checked={draft.consent}
+                      onChange={(e) => {
+                        setDraft((d) => ({ ...d, consent: e.target.checked }));
+                        if (e.target.checked) setErrors((er) => ({ ...er, consent: undefined }));
+                      }}
+                      aria-invalid={errors.consent ? true : undefined}
+                      aria-describedby={errors.consent ? "an-consent-err" : undefined}
+                    />
+                    <span>
+                      I agree to Dr. Nyaoncha&rsquo;s practice using these details, including the reason for my visit,
+                      to arrange my appointment, as described in the{" "}
+                      <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                    </span>
+                  </label>
+                  {errors.consent && <p className="cq-form-error" id="an-consent-err" role="alert">{errors.consent}</p>}
+                </div>
               </div>
             )}
 

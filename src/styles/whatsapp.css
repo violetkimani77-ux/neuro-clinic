@@ -1,0 +1,21 @@
+/* ═══════════ DR. NYAONCHA — WHATSAPP BUBBLE ═══════════
+   Sits directly above the assistant bubble (.cq-page .chatbot-bubble) at each
+   breakpoint the bubble actually uses: 56px at 28px from the edge, then 48px
+   at 18px from ≤639px. */
+
+.cq-wa{position:fixed;right:28px;bottom:96px;z-index:96;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.cq-wa__bubble{width:56px;height:56px;border-radius:50%;border:0;background:#1da851;color:#fff;display:grid;place-items:center;box-shadow:0 10px 26px rgba(29,168,81,.42);transition:transform .2s,box-shadow .2s}
+.cq-wa__bubble:hover{transform:scale(1.06);box-shadow:0 14px 32px rgba(29,168,81,.5)}
+.cq-wa__bubble:focus-visible,.cq-wa__start:focus-visible,.cq-wa__close:focus-visible{outline:3px solid var(--cq-petrol-600);outline-offset:3px}
+.cq-wa__card{position:relative;width:min(300px,calc(100vw - 36px));background:#fff;border:1px solid var(--cq-line);border-radius:14px;padding:18px 18px 16px;box-shadow:0 16px 48px #072c3140;color:var(--cq-ink);font-family:var(--cq-font-body)}
+.cq-wa__close{position:absolute;top:6px;right:6px;width:36px;height:36px;border:0;background:none;color:var(--cq-muted);font-size:22px;line-height:1}
+.cq-wa__title{margin:0 28px 4px 0;font:600 18px var(--cq-font-display)}
+.cq-wa__text{margin:0 0 14px;color:var(--cq-muted);font-size:14.5px;line-height:1.5}
+.cq-wa__start{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:999px;background:#1da851;color:#fff!important;font-weight:600;text-decoration:none}
+.cq-wa__start:hover{background:#178f45}
+.cq-wa__hours{margin:10px 0 0;font-size:12.5px;color:var(--cq-muted);text-align:center}
+
+/* Hide while the assistant panel is open, so the two never overlap. */
+body:has(.chatbot-panel--open) .cq-wa{opacity:0;visibility:hidden;pointer-events:none}
+
+@media (max-width:639px){.cq-wa{right:18px;bottom:76px}.cq-wa__bubble{width:48px;height:48px}.cq-wa__bubble svg{width:26px;height:26px}}

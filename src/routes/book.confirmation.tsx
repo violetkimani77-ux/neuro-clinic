@@ -32,6 +32,13 @@ function CheckIcon() {
   );
 }
 
+const STATUS_LABEL: Record<BookingConfirmation["status"], string> = {
+  REQUESTED: "Requested",
+  CONFIRMED: "Confirmed",
+  CANCELLED: "Cancelled",
+  COMPLETED: "Completed",
+};
+
 const WHATS_NEXT = [
   {
     title: "The practice confirms your request",
@@ -121,7 +128,7 @@ function Ready({ booking: b }: { booking: BookingConfirmation }) {
         <p className="cq-eyebrow">Dr. Andrew Nyaoncha</p>
         <h1 className="cq-h2">Request sent</h1>
         <p className="cq-lead">Your appointment request has been received. The practice will confirm your appointment by {contactPhrase(b.preferredContact)}.</p>
-        <span className="cq-status">Requested</span>
+        <span className={`cq-status cq-status--${b.status.toLowerCase()}`}>{STATUS_LABEL[b.status]}</span>
         <p className="cq-confirm__ref">Reference <strong>{b.reference}</strong></p>
       </div>
 

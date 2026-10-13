@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "./booking.css";
+@import "./whatsapp.css";
+@import "./staff.css";
+@import "./home-extras.css";
 
 @source "../../src/**/*.{ts,tsx}";
 
