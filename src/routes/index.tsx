@@ -16,15 +16,15 @@ const MAP_QUERY = encodeURIComponent(PRACTICE.address);
 const MAP_EMBED = `https://www.google.com/maps?q=${MAP_QUERY}&output=embed`;
 const DIRECTIONS = `https://www.google.com/maps/dir/?api=1&destination=${MAP_QUERY}`;
 
-/* Home page. Hero, numbers, services, about and reviews are unchanged from the
-   ihltech /demo-drandrew page; the contact section now sends call-back requests
-   to the staff screen and has a map; the FAQ follows it. */
+/* Home page. Hero, numbers, services and about are unchanged from the
+   ihltech /demo-drandrew page. The patient testimonials section was removed
+   (KMPDC advertising rules prohibit testimonials). The contact section sends
+   call-back requests to the staff screen and has a map; the FAQ follows it. */
 function CliniqDemo(){ return <CqShell home>
 <section className="cq-hero cq-section"><video className="cq-hero__video" src="/cliniq/hero-bg.mp4" poster="/cliniq/dr-nyaoncha.jpg" preload="none" autoPlay muted loop playsInline/><div className="cq-hero__overlay"/><div className="cq-container cq-hero__grid"><div className="cq-hero__copy"><p className="cq-eyebrow">Consultant Neurosurgeon · Nyeri, Kenya</p><h1 className="cq-hero__title">Dr. Andrew Nyaoncha</h1><p className="cq-hero__lead">Doctors Plaza, Nyeri — providing brain, spine and nervous system care across the Mt Kenya region.</p><div className="cq-hero__actions"><a className="cq-btn cq-btn--primary cq-btn--lg" href="/book">Book a Consultation</a><a className="cq-btn cq-btn--ghost cq-btn--lg" href="tel:+254721358137"><span className="cq-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 5.18 2 2 0 0 1 4.11 3h3a2 2 0 0 1 2 1.72c.13 1.02.37 2.02.72 2.96a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.13-1.13a2 2 0 0 1 2.11-.45c.94.35 1.94.59 2.96.72A2 2 0 0 1 22 16.92Z"/></svg></span>Call {phone}</a></div><p className="cq-hero__creds">MBChB (UoN) · M.Med Gen Surgery (AKU) · FCS-ECSA Neurosurgery (COSECSA) · RCS UK</p></div></div></section>
 <section className="cq-ledger"><div className="cq-container"><p className="cq-ledger__eyebrow">The practice in numbers</p><div className="cq-ledger__grid">{[["300+","Complex procedures since 2018"],["15+","Years of experience"],["Top 40","Under 40 — Business Daily, 2019"],["1 of 2","Neurosurgeons serving central & northern Kenya"]].map(x=><div className="cq-stat" key={x[0]}><b>{x[0]}</b><span>{x[1]}</span></div>)}</div><p className="cq-ledger__strip">Fellow, COSECSA — FCS-ECSA 2018 · Royal College of Surgeons UK, 2016 · 5/5 patient rating</p></div></section>
 <section id="section-services" className="cq-section"><div className="cq-container"><div className="cq-head"><p className="cq-eyebrow">What I treat</p><h2 className="cq-h2">Surgical care for the brain, spine &amp; nervous system</h2><p className="cq-lead">Precision and compassion — close to home.</p></div><div className="cq-services">{services.map((s,i)=>{const [t,d]=s.split("|");return <a href={`/book/${slugOf(t)}`} className="cq-service" key={t}><span className="cq-service__num">{String(i+1).padStart(2,"0")}</span><span className="cq-service__body"><strong>{t}</strong><small>{d}</small></span><span className="cq-service__link">Book a visit →</span></a>})}</div></div></section>
 <section id="section-about" className="cq-section cq-section--sand"><div className="cq-container"><div className="cq-head cq-head--left"><p className="cq-eyebrow">Meet Dr Nyaoncha</p><h2 className="cq-h2">From a Yale scholarship to Nyeri's operating theatre</h2></div><div className="cq-bio__grid"><div><p className="cq-bio__pullquote">“I don't feel like a village neurosurgeon at all.”</p><div className="cq-bio__text"><p>Dr. Andrew Nyaoncha turned down a scholarship to study computer engineering at Yale University to pursue medicine, graduating with an MBChB from the University of Nairobi in 2008.</p><p>After general surgery training at Aga Khan University in 2015, he found himself performing more brain-related cases than any other type. Mentors Dr. Mahamood Qureshi and Dr. David Oluoch-Olunya encouraged him into neurosurgery.</p><p>He trained at the Royal College of Surgeons, UK in 2016 and earned his FCS-ECSA in 2018 as the top candidate in Kigali. Named Top 40 Under 40 in 2019, he now serves patients across Nyeri, Nyahururu, Murang'a and Samburu.</p></div><div className="cq-timeline">{[["2008","MBChB","University of Nairobi"],["2015","M.Med General Surgery","Aga Khan University"],["2016","Royal College of Surgeons","United Kingdom"],["2018","FCS-ECSA Neurosurgery","COSECSA · top candidate, Kigali"],["2019","Top 40 Under 40","Business Daily · Doctor with a Difference"],["Today","300+ procedures","Serving the Mt Kenya region"]].map(x=><div className="cq-timeline__row" key={x[0]}><b>{x[0]}</b><span><strong>{x[1]}</strong><small>{x[2]}</small></span></div>)}</div></div><div>{quotes.map(q=><blockquote className="cq-quote" key={q}>{q}</blockquote>)}</div></div></div></section>
-<section id="section-reviews" className="cq-section"><div className="cq-container"><div className="cq-head"><p className="cq-eyebrow">Our Patient Stories</p><h2 className="cq-h2">What Our Patients Say</h2></div><div className="cq-letters">{[["Looking for the best Neurosurgeon you just found him. He is the best I have met so far…","Purity Kariuki","Jul 2026","5/5"],["Best Aneurysm surgeon in Kenya — he does it with precision and passion.","Paul","Nov 2022","5/5"],["Daktari is a gifted man… thanks for walking the journey with us.","Lilian Nyambura Wachira","KTN News · Oct 2020","news"],["The best neurosurgeon, he did my brother surgery, and he's doing well. Thank so much doc.","Eliza Mambo","KTN News · Oct 2020","news"]].map(x=><article className="cq-letter" key={x[1]}><span className="cq-letter__mark" aria-hidden="true">❝</span><p>{x[0]}</p><div className="cq-letter__rating">{x[3]==="news"?<span className="cq-letter__tag">KTN News · Oct 2020</span>:"★★★★★ · "+x[3]}</div><footer><strong>{x[1]}</strong><small>{x[2]}</small></footer></article>)}</div></div></section>
 <ContactSection/>
 <FaqSection/>
 </CqShell>}
@@ -43,7 +43,7 @@ function ContactSection() {
     }
   };
   return (
-    <section id="section-contact" className="cq-section cq-section--sand">
+    <section id="section-contact" className="cq-section">
       <div className="cq-container">
         <div className="cq-head">
           <p className="cq-eyebrow">Get in touch</p>
@@ -98,7 +98,7 @@ function ContactSection() {
 
 function FaqSection() {
   return (
-    <section id="section-faq" className="cq-section">
+    <section id="section-faq" className="cq-section cq-section--sand">
       <div className="cq-container cq-faq">
         <div className="cq-head">
           <p className="cq-eyebrow">Questions</p>

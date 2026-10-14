@@ -24,7 +24,6 @@ export default function CqShell({ children, home = false }: { children: ReactNod
           <nav className="cq-nav__links" aria-label="Primary">
             <a href={at("section-about")}>About</a>
             <a href={at("section-services")}>Services</a>
-            <a href={at("section-reviews")}>Reviews</a>
             <a href={at("section-faq")}>FAQ</a>
           </nav>
           <div className="cq-nav__actions">
@@ -41,7 +40,6 @@ export default function CqShell({ children, home = false }: { children: ReactNod
           <nav className="cq-drawer__nav">
             <a onClick={close} href={at("section-about")}>About</a>
             <a onClick={close} href={at("section-services")}>Services</a>
-            <a onClick={close} href={at("section-reviews")}>Reviews</a>
             <a onClick={close} href={at("section-faq")}>FAQ</a>
             <a onClick={close} href="/book">Book a Consultation</a>
           </nav>
